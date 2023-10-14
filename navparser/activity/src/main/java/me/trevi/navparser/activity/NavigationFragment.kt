@@ -1,5 +1,6 @@
 package me.trevi.navparser.activity
 
+import android.graphics.Bitmap
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
@@ -11,6 +12,9 @@ import me.trevi.navparser.NavParserActivity
 import me.trevi.navparser.NavigationDataModel
 import me.trevi.navparser.activity.databinding.FragmentNavigationBinding
 import me.trevi.navparser.lib.NavigationData
+import java.io.ByteArrayOutputStream
+import java.math.BigInteger
+import java.security.MessageDigest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -84,5 +88,23 @@ class NavigationFragment : Fragment() {
         binding.distance.text = getString(R.string.distance).format(navData.remainingDistance.localeString)
         binding.stopNavButton.isEnabled = navData.canStop
         binding.actionDirection.setImageBitmap(navData.actionIcon.bitmap)
+
+        val bm = navData.actionIcon.bitmap
+        if ( bm != null) {
+            var baos = ByteArrayOutputStream()
+            //bm is the bitmap object
+            bm!!.compress(Bitmap.CompressFormat.PNG, 100, baos)
+            var byteArray = baos.toByteArray()
+            var md5 = MessageDigest.getInstance("MD5")
+            val md5CheckSum = BigInteger(1, md5.digest(byteArray)).toString(16).padStart(32, '0').toString();
+            binding.nextDirection.text = navData.nextDirection.localeString + ":"+ md5CheckSum;
+            //md5CheckSum will be different for different image, hence you can use it to identify left, right, straight
+            //Steps: 1) set the map which has left turn and right turn in your phone
+            //2) checksum will be displayed in the screen in direction text, note that
+            //3) then come here and use that check sum to figure out left, right, straight,
+            // if ( md5CheckSum.equals("13e68aacc62531a385e2b3e9705e0701")) then straight;
+            // etc
+        }
+
     }
 }
